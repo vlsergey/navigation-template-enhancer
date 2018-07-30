@@ -1,0 +1,16 @@
+{
+  "plugins": [
+    "transform-class-properties",
+    "transform-object-rest-spread",
+    ["transform-runtime", {
+      "polyfill": false,
+    }],
+  ],
+  "presets": [
+    ["env", {
+      "targets": {
+        "browsers": [">0.1%", "safari >= 10", "ie >= 11"]
+      }
+    }]
+  ]
+}
