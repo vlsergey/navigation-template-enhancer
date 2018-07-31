@@ -69,6 +69,17 @@ export default class Template extends Container {
       } );
   }
 
+  padValues() {
+    this.children
+      .filter( child => child instanceof TemplatePart )
+      .filter( child => !!child.getValueAsNode() )
+      .filter( child => child.getValueAsNode().toWikitext( true ).trim().indexOf( '\n' ) === -1 )
+      .forEach( child => {
+        child.getValueAsNode().trim();
+        child.setValueAsNode( new Container( [ new TextNode( ' ' ), ...child.getValueAsNode().children, new TextNode( '\n' ) ] ) );
+      } );
+  }
+
   toWikitext( stripComments ) {
     return '{{' + this.children
       .map( child => child.toWikitext( stripComments ) )
@@ -139,11 +150,14 @@ export class TemplatePart extends Container {
     this.setNameAsNode( new TextNode( str ) );
   }
 
+  getValueAsNode() {
+    return this.children.find( child => child instanceof TemplatePartValue );
+  }
+
   getValueAsString() {
-    const name = this.children
-      .find( child => child instanceof TemplatePartValue );
-    if ( name ) {
-      return name.getTextIfOnlyText();
+    const value = this.getValueAsNode();
+    if ( value ) {
+      return value.getTextIfOnlyText();
     }
   }
 

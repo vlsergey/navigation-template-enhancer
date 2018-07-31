@@ -40,4 +40,20 @@ export default class Container extends WikiDomNode {
       .join( '' );
   }
 
+  trim( trimLeft = true, trimRight = true ) {
+    if ( this.children.length > 0 ) {
+      if ( trimLeft ) {
+        if ( this.children[ 0 ] instanceof TextNode ) {
+          this.children[ 0 ].value = this.children[ 0 ].value.replace( /^[\s\r\n\t]+/, '' );
+        }
+      }
+      if ( trimRight ) {
+        const last = this.children[ this.children.length - 1 ];
+        if ( last instanceof TextNode ) {
+          last.value = last.value.replace( /[\s\r\n\t]+$/, '' );
+        }
+      }
+    }
+  }
+
 }

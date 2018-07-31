@@ -4,8 +4,10 @@ export default function enchance( dom ) {
 
   dom.getChildByClass( Template )
     .filter( template => template.findTitleText() === 'Навигационная полоса' )
-    .map( template => { template.padNames(); return template; } )
     .forEach( template => {
+
+      template.padNames();
+      template.padValues();
 
       const contentPart = template.findPartByNameText( 'содержание' );
       if ( !contentPart ) return;
