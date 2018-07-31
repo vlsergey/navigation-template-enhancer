@@ -9,21 +9,22 @@ export default class Template {
     let title;
     const parts = [];
 
-    const children = [];
     for ( let i = 0; i < node.children.length; i++ ) {
-      const node = node.children[ i ];
-      expect( node ).toBeAn( Element );
+      const child = node.children[ i ];
+      expect( child ).toBeAn( Element );
 
-      switch ( node.nodeName ) {
-      case 'title':
-        title = TemplateTitle.parse( parser, node );
+      switch ( child.nodeName ) {
+      case 'title': {
+        title = child.textContent;
         break;
-      case 'part':
-        const part = TemplatePart.parse( parser, node );
+      }
+      case 'part': {
+        const part = TemplatePart.parse( parser, child );
         parts.push( part );
         break;
+      }
       default:
-        throw new Error( 'Unsupported template child node: ' + node.nodeName );
+        throw new Error( 'Unsupported template child node: ' + child.nodeName );
       }
     }
 
@@ -40,7 +41,7 @@ export default class Template {
       result += this.title.toWikitext( stripComments );
     }
 
-    if ( parts ) {
+    if ( this.parts ) {
       result += this.parts
         .map( child => child.toWikitext( stripComments ) )
         .join( '' );
@@ -48,10 +49,6 @@ export default class Template {
 
     return result;
   }
-
-}
-
-export class TemplateTitle {
 
 }
 
