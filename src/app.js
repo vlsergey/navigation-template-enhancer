@@ -1,6 +1,7 @@
 import 'babel-polyfill';
 import addToolbarButton from './addToolbarButton';
-
+import enhanceNavStripeContent from 'enhancers/enhanceNavStripeContent';
+import { getServerApi } from './ApiUtils.js';
 import Parser from './dom/Parser';
 
 if ( mw.config.get( 'wgDBname' ) === 'ruwiki' ) {
@@ -15,10 +16,11 @@ if ( mw.config.get( 'wgDBname' ) === 'ruwiki' ) {
 }
 
 function doReformat() {
-  const original = $( '#wpTextbox1' ).text();
-  console.log( original );
+  const jQueryTextBox = $( '#wpTextbox1' );
+  const original = jQueryTextBox.text();
+  jQueryTextBox.prop( 'disabled', true );
 
-  new mw.Api().post( {
+  getServerApi().postPromise( {
     action: 'parse',
     contentmodel: 'wikitext',
     disablelimitreport: true,
@@ -28,11 +30,14 @@ function doReformat() {
   } ).then( result => {
     const parser = new DOMParser();
     const strXml = result.parse.parsetree[ '*' ];
-    console.log( 'Retrieved tree: ' + JSON.stringify( strXml ) );
 
     const doc = parser.parseFromString( strXml, 'application/xml' );
-    console.log( doc );
+    const dom = new Parser().parseDocument( doc );
+    enhanceNavStripeContent( dom );
 
-    new Parser().convertDocument( doc );
+    const newText = dom.toWikitext( false );
+    $( '#wpTextbox1' ).text( newText );
+  } ).finally( () => {
+    jQueryTextBox.prop( 'disabled', false );
   } );
 }

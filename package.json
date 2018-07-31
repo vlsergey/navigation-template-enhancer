@@ -44,7 +44,8 @@
   "scripts": {
     "serve": "webpack-serve --no-clipboard",
     "deploy": "webpack -p && eslint ./deploy-to-wikipedia.js --fix || babel ./deploy-to-wikipedia.js > ./dist/deploy-to-wikipedia.out.js && node ./dist/deploy-to-wikipedia.out.js",
-    "test:watch": "karma start karma.conf.js --no-single-run"
+    "test:watch": "karma start karma.conf.js --no-single-run",
+    "test:watch:chrome": "karma start karma.conf.js --no-single-run --browsers Chrome"
   },
   "author": "Sergey Vladimirov a.k.a. vlsergey",
   "license": "ISC"

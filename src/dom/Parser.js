@@ -1,8 +1,12 @@
+import Container from './Container';
 import expect from 'expect';
+import Ignore from './Ignore';
 import Root from './Root';
 import Template from './Template';
+import TextNode from './TextNode';
 
 const KNOWN_NODES = {
+  ignore: Ignore,
   root: Root,
   template: Template,
 };
@@ -10,6 +14,9 @@ const KNOWN_NODES = {
 export default class Parser {
 
   parse( node ) {
+    if ( node.nodeType === Node.TEXT_NODE ) {
+      return new TextNode( node.textContent );
+    }
     expect( node ).toBeAn( Element );
 
     const { nodeName } = node;
@@ -18,6 +25,13 @@ export default class Parser {
       throw new Error( 'Uknown node type: ' + nodeName );
     }
     return knownClass.parse( this, node );
+  }
+
+  parseChildren( node ) {
+    if ( node.childNodes === null || node.childNodes.length === 0 ) {
+      return null;
+    }
+    return new Container( Container.parseChildren( this, node ) );
   }
 
   parseDocument( doc ) {

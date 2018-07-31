@@ -1,26 +1,27 @@
+import Container from './Container';
 import expect from 'expect';
+import TextNode from './TextNode';
+import WikiDomNode from './WikiDomNode';
 
-export default class Template {
+export default class Template extends Container {
 
   static parse( parser, node ) {
     expect( parser ).toBeAn( 'object' );
     expect( node ).toBeAn( Element );
 
-    let title;
-    const parts = [];
+    const children = [];
 
-    for ( let i = 0; i < node.children.length; i++ ) {
-      const child = node.children[ i ];
+    for ( let i = 0; i < node.childNodes.length; i++ ) {
+      const child = node.childNodes[ i ];
       expect( child ).toBeAn( Element );
 
       switch ( child.nodeName ) {
       case 'title': {
-        title = child.textContent;
+        children.push( new TemplateTitle( Container.parseChildren( parser, child ) ) );
         break;
       }
       case 'part': {
-        const part = TemplatePart.parse( parser, child );
-        parts.push( part );
+        children.push( TemplatePart.parse( parser, child ) );
         break;
       }
       default:
@@ -28,30 +29,142 @@ export default class Template {
       }
     }
 
-    const result = new Template();
-    result.title = title;
-    result.parts = parts;
-    return result;
+    return new Template( children );
+  }
+
+  findTitleText() {
+    if ( this.children && this.children[ 0 ] instanceof TemplateTitle ) {
+      const asText = this.children[ 0 ].getTextIfOnlyText();
+      if ( asText ) {
+        return asText.trim();
+      }
+    }
+  }
+
+  findPartByNameText( name ) {
+    expect( name ).toBeA( 'string' );
+
+    return this.children
+      .filter( child => child instanceof TemplatePart )
+      .find( child => ( child.getNameAsString() || '' ).trim() === name );
+  }
+
+  padNames() {
+    const hasNonTextNames = this.children
+      .filter( child => child instanceof TemplatePart )
+      .some( child => !child.getNameAsString() );
+    if ( hasNonTextNames ) return;
+
+    const maxTrimmedLength = 1 + this.children
+      .filter( child => child instanceof TemplatePart )
+      .map( part => part.getNameAsString().trim().length )
+      .reduce( ( acc, cur ) => Math.max( acc, cur ), 0 );
+
+    this.children
+      .filter( child => child instanceof TemplatePart )
+      .forEach( part => {
+        const oldName = part.getNameAsString();
+        const newName = oldName.trim().padRight( maxTrimmedLength, ' ' );
+        part.setNameAsString( newName );
+      } );
   }
 
   toWikitext( stripComments ) {
-
-    let result = '';
-    if ( this.title ) {
-      result += this.title.toWikitext( stripComments );
-    }
-
-    if ( this.parts ) {
-      result += this.parts
-        .map( child => child.toWikitext( stripComments ) )
-        .join( '' );
-    }
-
-    return result;
+    return '{{' + this.children
+      .map( child => child.toWikitext( stripComments ) )
+      .join( '|' ) + '}}';
   }
 
 }
 
-export class TemplatePart {
+export class TemplateTitle extends Container {
 
 }
+
+export class TemplatePart extends Container {
+
+  static parse( parser, node ) {
+    let index;
+    const children = [];
+
+    for ( let i = 0; i < node.childNodes.length; i++ ) {
+      const child = node.childNodes[ i ];
+      expect( child ).toBeAn( Element );
+
+      switch ( child.nodeName ) {
+      case 'name': {
+        index = child.getAttribute( 'index' );
+        children.push( new TemplatePartName( Container.parseChildren( parser, child ) ) );
+        break;
+      }
+      case 'equals': {
+        children.push( new TemplatePartEquals( Container.parseChildren( parser, child ) ) );
+        break;
+      }
+      case 'value': {
+        children.push( new TemplatePartValue( Container.parseChildren( parser, child ) ) );
+        break;
+      }
+      default:
+        throw new Error( 'Unsupported template part child node: ' + child.nodeName );
+      }
+    }
+
+    const result = new TemplatePart ( children );
+    result.index = index;
+    return result;
+  }
+
+  getNameAsString() {
+    const name = this.children
+      .find( child => child instanceof TemplatePartName );
+    if ( name ) {
+      return name.getTextIfOnlyText();
+    }
+  }
+
+  setNameAsNode( wikiDomNode ) {
+    expect( wikiDomNode ).toBeA( WikiDomNode );
+
+    const existing = this.children.find( child => child instanceof TemplatePartName );
+    if ( existing ) {
+      existing.children = [ wikiDomNode ];
+    } else {
+      this.children.unshift( new TemplatePartName( [ wikiDomNode ] ) );
+    }
+  }
+
+  setNameAsString( str ) {
+    expect( str ).toBeA( 'string' );
+    this.setNameAsNode( new TextNode( str ) );
+  }
+
+  getValueAsString() {
+    const name = this.children
+      .find( child => child instanceof TemplatePartValue );
+    if ( name ) {
+      return name.getTextIfOnlyText();
+    }
+  }
+
+  setValueAsNode( wikiDomNode ) {
+    expect( wikiDomNode ).toBeA( WikiDomNode );
+
+    const existing = this.children.find( child => child instanceof TemplatePartValue );
+    if ( existing ) {
+      existing.children = [ wikiDomNode ];
+    } else {
+      this.children.push( new TemplatePartValue( [ wikiDomNode ] ) );
+    }
+  }
+
+  setValueAsString( str ) {
+    expect( str ).toBeA( 'string' );
+    this.setValueAsNode( new TextNode( str ) );
+  }
+
+}
+
+export class TemplatePartName extends Container {}
+export class TemplatePartEquals extends Container {}
+export class TemplatePartValue extends Container {}
