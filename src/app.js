@@ -1,8 +1,11 @@
-import 'babel-polyfill';
 import addToolbarButton from './addToolbarButton';
 import enhanceNavStripeContent from 'enhancers/enhanceNavStripeContent';
 import { getServerApi } from './ApiUtils.js';
 import Parser from './dom/Parser';
+
+if ( !window._babelPolyfill ) {
+  require( 'babel-polyfill' );
+}
 
 if ( mw.config.get( 'wgDBname' ) === 'ruwiki' ) {
   addToolbarButton(
