@@ -1,5 +1,6 @@
 import Container from './Container';
 import expect from 'expect';
+import Extension from './Extension';
 import Ignore from './Ignore';
 import Root from './Root';
 import Template from './Template';
@@ -7,6 +8,7 @@ import TemplateArgument from './TemplateArgument';
 import TextNode from './TextNode';
 
 const KNOWN_NODES = {
+  ext: Extension,
   ignore: Ignore,
   root: Root,
   template: Template,

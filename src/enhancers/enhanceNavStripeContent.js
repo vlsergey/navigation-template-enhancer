@@ -4,6 +4,13 @@ import TextNode from 'dom/TextNode';
 export default function enchance( dom ) {
 
   dom.getChildByClass( Template )
+    .filter( template => template.findTitleText() === 'НП-Франция' )
+    .forEach( template => {
+      template.padNames();
+      template.padValues();
+    } );
+
+  dom.getChildByClass( Template )
     .filter( template => template.findTitleText() === 'Навигационная полоса' )
     .forEach( template => {
 
