@@ -3,12 +3,14 @@ import expect from 'expect';
 import Ignore from './Ignore';
 import Root from './Root';
 import Template from './Template';
+import TemplateArgument from './TemplateArgument';
 import TextNode from './TextNode';
 
 const KNOWN_NODES = {
   ignore: Ignore,
   root: Root,
   template: Template,
+  tplarg: TemplateArgument,
 };
 
 export default class Parser {

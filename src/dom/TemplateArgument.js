@@ -3,7 +3,7 @@ import expect from 'expect';
 import TextNode from './TextNode';
 import WikiDomNode from './WikiDomNode';
 
-export default class Template extends Container {
+export default class TemplateArgument extends Container {
 
   static parse( parser, node ) {
     expect( parser ).toBeAn( 'object' );
@@ -17,23 +17,23 @@ export default class Template extends Container {
 
       switch ( child.nodeName ) {
       case 'title': {
-        children.push( new TemplateTitle( Container.parseChildren( parser, child ) ) );
+        children.push( new TemplateArgumentTitle( Container.parseChildren( parser, child ) ) );
         break;
       }
       case 'part': {
-        children.push( TemplatePart.parse( parser, child ) );
+        children.push( TemplateArgumentPart.parse( parser, child ) );
         break;
       }
       default:
-        throw new Error( 'Unsupported template child node: ' + child.nodeName );
+        throw new Error( 'Unsupported template argument child node: ' + child.nodeName );
       }
     }
 
-    return new Template( children );
+    return new TemplateArgument( children );
   }
 
   findTitleText() {
-    if ( this.children && this.children[ 0 ] instanceof TemplateTitle ) {
+    if ( this.children && this.children[ 0 ] instanceof TemplateArgumentTitle ) {
       const asText = this.children[ 0 ].getTextIfOnlyText();
       if ( asText ) {
         return asText.trim();
@@ -45,31 +45,23 @@ export default class Template extends Container {
     expect( name ).toBeA( 'string' );
 
     return this.children
-      .filter( child => child instanceof TemplatePart )
+      .filter( child => child instanceof TemplateArgumentPart )
       .find( child => ( child.getNameAsString() || '' ).trim() === name );
-  }
-
-  getValuesAsNodesArray() {
-    return this.children
-      .filter( child => child instanceof TemplatePart )
-      .flatMap( child => child.children )
-      .filter( child => child instanceof TemplatePartValue )
-      .flatMap( child => child.children );
   }
 
   padNames() {
     const hasNonTextNames = this.children
-      .filter( child => child instanceof TemplatePart )
+      .filter( child => child instanceof TemplateArgumentPart )
       .some( child => !child.getNameAsString() );
     if ( hasNonTextNames ) return;
 
     const maxTrimmedLength = 1 + this.children
-      .filter( child => child instanceof TemplatePart )
+      .filter( child => child instanceof TemplateArgumentPart )
       .map( part => part.getNameAsString().trim().length )
       .reduce( ( acc, cur ) => Math.max( acc, cur ), 0 );
 
     this.children
-      .filter( child => child instanceof TemplatePart )
+      .filter( child => child instanceof TemplateArgumentPart )
       .forEach( part => {
         const oldName = part.getNameAsString();
         const newName = oldName.trim().padRight( maxTrimmedLength, ' ' );
@@ -79,7 +71,7 @@ export default class Template extends Container {
 
   padValues() {
     this.children
-      .filter( child => child instanceof TemplatePart )
+      .filter( child => child instanceof TemplateArgumentPart )
       .filter( child => !!child.getValueAsNode() )
       .filter( child => child.getValueAsNode().toWikitext( true ).trim().indexOf( '\n' ) === -1 )
       .forEach( child => {
@@ -89,18 +81,18 @@ export default class Template extends Container {
   }
 
   toWikitext( stripComments ) {
-    return '{{' + this.children
+    return '{{{' + this.children
       .map( child => child.toWikitext( stripComments ) )
-      .join( '|' ) + '}}';
+      .join( '|' ) + '}}}';
   }
 
 }
 
-export class TemplateTitle extends Container {
+export class TemplateArgumentTitle extends Container {
 
 }
 
-export class TemplatePart extends Container {
+export class TemplateArgumentPart extends Container {
 
   static parse( parser, node ) {
     let index;
@@ -113,15 +105,15 @@ export class TemplatePart extends Container {
       switch ( child.nodeName ) {
       case 'name': {
         index = child.getAttribute( 'index' );
-        children.push( new TemplatePartName( Container.parseChildren( parser, child ) ) );
+        children.push( new TemplateArgumentPartName( Container.parseChildren( parser, child ) ) );
         break;
       }
       case 'equals': {
-        children.push( new TemplatePartEquals( Container.parseChildren( parser, child ) ) );
+        children.push( new TemplateArgumentPartEquals( Container.parseChildren( parser, child ) ) );
         break;
       }
       case 'value': {
-        children.push( new TemplatePartValue( Container.parseChildren( parser, child ) ) );
+        children.push( new TemplateArgumentPartValue( Container.parseChildren( parser, child ) ) );
         break;
       }
       default:
@@ -129,14 +121,14 @@ export class TemplatePart extends Container {
       }
     }
 
-    const result = new TemplatePart ( children );
+    const result = new TemplateArgumentPart ( children );
     result.index = index;
     return result;
   }
 
   getNameAsString() {
     const name = this.children
-      .find( child => child instanceof TemplatePartName );
+      .find( child => child instanceof TemplateArgumentPartName );
     if ( name ) {
       return name.getTextIfOnlyText();
     }
@@ -145,11 +137,11 @@ export class TemplatePart extends Container {
   setNameAsNode( wikiDomNode ) {
     expect( wikiDomNode ).toBeA( WikiDomNode );
 
-    const existing = this.children.find( child => child instanceof TemplatePartName );
+    const existing = this.children.find( child => child instanceof TemplateArgumentPartName );
     if ( existing ) {
       existing.children = [ wikiDomNode ];
     } else {
-      this.children.unshift( new TemplatePartName( [ wikiDomNode ] ) );
+      this.children.unshift( new TemplateArgumentPartName( [ wikiDomNode ] ) );
     }
   }
 
@@ -159,7 +151,7 @@ export class TemplatePart extends Container {
   }
 
   getValueAsNode() {
-    return this.children.find( child => child instanceof TemplatePartValue );
+    return this.children.find( child => child instanceof TemplateArgumentPartValue );
   }
 
   getValueAsString() {
@@ -172,11 +164,11 @@ export class TemplatePart extends Container {
   setValueAsNode( wikiDomNode ) {
     expect( wikiDomNode ).toBeA( WikiDomNode );
 
-    const existing = this.children.find( child => child instanceof TemplatePartValue );
+    const existing = this.children.find( child => child instanceof TemplateArgumentPartValue );
     if ( existing ) {
       existing.children = [ wikiDomNode ];
     } else {
-      this.children.push( new TemplatePartValue( [ wikiDomNode ] ) );
+      this.children.push( new TemplateArgumentPartValue( [ wikiDomNode ] ) );
     }
   }
 
@@ -187,6 +179,6 @@ export class TemplatePart extends Container {
 
 }
 
-export class TemplatePartName extends Container {}
-export class TemplatePartEquals extends Container {}
-export class TemplatePartValue extends Container {}
+export class TemplateArgumentPartName extends Container {}
+export class TemplateArgumentPartEquals extends Container {}
+export class TemplateArgumentPartValue extends Container {}

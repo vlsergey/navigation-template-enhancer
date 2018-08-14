@@ -40,6 +40,33 @@ export default class Container extends WikiDomNode {
       .join( '' );
   }
 
+  mapFilteredChildrenR( predicate, map ) {
+    this.children = this.children.flatMap( child => {
+      if ( !predicate( child ) ) return [ child ];
+      const result = map( child );
+      return Array.isArray( result ) ? result : [ result ];
+    } );
+
+    this.children
+      .filter( child => child instanceof Container )
+      .forEach( child => child.mapFilteredChildrenR( predicate, map ) );
+  }
+
+  mergeTextNodes( ) {
+    this.children
+      .filter( child => child instanceof Container )
+      .forEach( child => child.mergeTextNodes() );
+
+    for ( let i = this.children.length - 1; i >= 1; i-- ) {
+      const c1 = this.children[ i - 1 ];
+      const c2 = this.children[ i ];
+      if ( c1 instanceof TextNode && c2 instanceof TextNode ) {
+        this.children[ i - 1 ] = new TextNode( c1.value + c2.value );
+        this.children.splice( i, 1 );
+      }
+    }
+  }
+
   trim( trimLeft = true, trimRight = true ) {
     if ( this.children.length > 0 ) {
       if ( trimLeft ) {
