@@ -20,7 +20,7 @@ if ( mw.config.get( 'wgDBname' ) === 'ruwiki' ) {
 
 function doReformat() {
   const jQueryTextBox = $( '#wpTextbox1' );
-  const original = jQueryTextBox.text();
+  const original = jQueryTextBox[ 0 ].value;
   jQueryTextBox.prop( 'disabled', true );
 
   getServerApi().postPromise( {
@@ -39,7 +39,7 @@ function doReformat() {
     enhanceNavStripeContent( dom );
 
     const newText = dom.toWikitext( false );
-    $( '#wpTextbox1' ).text( newText );
+    $( '#wpTextbox1' )[ 0 ].value = newText;
   } ).finally( () => {
     jQueryTextBox.prop( 'disabled', false );
   } );
