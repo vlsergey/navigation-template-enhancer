@@ -84,7 +84,8 @@ export default class Template extends Container {
       .filter( child => child.getValueAsNode().toWikitext( true ).trim().indexOf( '\n' ) === -1 )
       .forEach( child => {
         child.getValueAsNode().trim();
-        child.setValueAsNode( new Container( [ new TextNode( ' ' ), ...child.getValueAsNode().children, new TextNode( '\n' ) ] ) );
+        child.setValueAsNodes( [ new TextNode( ' ' ), ...child.getValueAsNode().children, new TextNode( '\n' ) ] );
+        child.mergeTextNodes();
       } );
   }
 
@@ -177,6 +178,17 @@ export class TemplatePart extends Container {
       existing.children = [ wikiDomNode ];
     } else {
       this.children.push( new TemplatePartValue( [ wikiDomNode ] ) );
+    }
+  }
+
+  setValueAsNodes( wikiDomNodes ) {
+    expect( wikiDomNodes ).toBeAn( 'array' );
+
+    const existing = this.children.find( child => child instanceof TemplatePartValue );
+    if ( existing ) {
+      existing.children = [ ...wikiDomNodes ];
+    } else {
+      this.children.push( new TemplatePartValue( [ ...wikiDomNodes ] ) );
     }
   }
 

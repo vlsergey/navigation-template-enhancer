@@ -52,6 +52,29 @@ export default class Container extends WikiDomNode {
       .forEach( child => child.mapFilteredChildrenR( predicate, map ) );
   }
 
+  mergeContainers() {
+    this.children
+      .filter( child => child instanceof Container )
+      .forEach( child => child.mergeContainers() );
+
+    this.children
+      .filter( child => child instanceof Container )
+      .filter( child => child.children.length === 1 )
+      .filter( child => child.children[ 0 ].constructor === Container )
+      .forEach( child => {
+        child.children = child.children[ 0 ].children;
+      } );
+
+    for ( let i = this.children.length - 1; i >= 1; i-- ) {
+      const c1 = this.children[ i - 1 ];
+      const c2 = this.children[ i ];
+      if ( c1.constructor == Container && c2.constructor == Container ) {
+        this.children[ i - 1 ] = new Container( [ ...c1.children, ...c2.children ] );
+        this.children.splice( i, 1 );
+      }
+    }
+  }
+
   mergeTextNodes( ) {
     this.children
       .filter( child => child instanceof Container )
